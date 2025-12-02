@@ -21,14 +21,15 @@ The database is designed to track:
 ---
 
 ## Table of Contents
-1. [Description](#what-is-this-database?)
+1. [Description](#what-is-this-database)
 2. [EER Diagram](#eer-diagram)
 3. [Tables and Descriptions](#tables-and-descriptions)
 4. [Views](#views)
 5. [Stored Procedures](#stored-procedures)
 6. [Stored Functions](#stored-functions)
 7. [Locking Transactions](#locking-transactions)
-8. [Authors](#authors)
+8. [Triggers](#triggers)
+9. [Developers](#developers)
 
 ---
 ## EER Diagram 
@@ -234,6 +235,12 @@ Extends base `people` information for students.
 | **Update a room's capacity** | Changes the max capacity of a classroom. | 
 | **Delete a department and its courses** | Deletes a department and all related courses safely. |
 
+---
+
+ ## Triggers
+| Trigger | What It Does |
+|----------------------|--------------|
+| **Format course_code** | Ensures the course_code is in the correct format (AAA###). | 
 ---
 
 ## Developers
