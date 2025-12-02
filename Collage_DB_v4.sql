@@ -700,3 +700,35 @@ DELIMITER ;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-11-25 12:52:47
+
+-- This trigger is used to make sure the Course Code is in the correct format,
+-- meaning it has to have 3 capital letters and 3 numbers, with no spaces.
+-- If this criteria aren't met, the trigger will throw an error.
+
+DELIMITER $$
+
+CREATE TRIGGER trg_course_code_before_insert
+BEFORE INSERT ON course
+FOR EACH ROW
+BEGIN
+    IF NEW.course_code NOT REGEXP '^[A-Za-z]{3}[0-9]{3}$' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'course_code must match pattern AAA### (3 letters + 3 digits)';
+    END IF;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_course_code_before_update
+BEFORE UPDATE ON course
+FOR EACH ROW
+BEGIN
+    IF NEW.course_code NOT REGEXP '^[A-Za-z]{3}[0-9]{3}$' THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'course_code must match pattern AAA### (3 letters + 3 digits)';
+    END IF;
+END$$
+
+DELIMITER ;
