@@ -705,6 +705,14 @@ DELIMITER ;
 -- meaning it has to have 3 capital letters and 3 numbers, with no spaces.
 -- If this criteria aren't met, the trigger will throw an error.
 
+CREATE TABLE course_audit (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    action_type ENUM('INSERT','UPDATE','DELETE'),
+    course_id INT,
+    course_code VARCHAR(10),
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 DELIMITER $$
 
 CREATE TRIGGER trg_course_code_before_insert
@@ -732,3 +740,44 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_course_audit_insert
+AFTER INSERT ON course
+FOR EACH ROW
+BEGIN
+    INSERT INTO course_audit (action_type, course_id, course_code)
+    VALUES ('INSERT', NEW.course_id, NEW.course_code);
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_course_audit_update
+AFTER UPDATE ON course
+FOR EACH ROW
+BEGIN
+    INSERT INTO course_audit (action_type, course_id, course_code)
+    VALUES ('UPDATE', NEW.course_id, NEW.course_code);
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_course_audit_delete
+AFTER DELETE ON course
+FOR EACH ROW
+BEGIN
+    INSERT INTO course_audit (action_type, course_id, course_code)
+    VALUES ('DELETE', OLD.course_id, OLD.course_code);
+END$$
+
+DELIMITER ;
+
+CREATE EVENT ev_course_audit_monthly_cleanup
+ON SCHEDULE EVERY 1 MONTH
+DO
+    TRUNCATE TABLE course_audit;
