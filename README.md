@@ -29,7 +29,8 @@ The database is designed to track:
 6. [Stored Functions](#stored-functions)
 7. [Locking Transactions](#locking-transactions)
 8. [Triggers](#triggers)
-9. [Developers](#developers)
+9. [Trigger Testing](#Trigger-Testing)
+10. [Developers](#developers)
 
 ---
 ## EER Diagram 
@@ -222,7 +223,8 @@ Extends base `people` information for students.
 | **Calculate total students in a department** | Returns how many students belong to a department. | 
 | **GPA validation** | validates a students gpa and returns either an error msg or if the gpa can be used | 
 | **Get department name by course** | Returns which department a course belongs to. | 
-| **Get grade value** | Converts letter grades into numeric values (A = 4.0). |
+| **Make System User Id** | Generates a unique system user id based on a person's name, using prefix + numeric suffix pattern (e.g., dejohn01, dejohn02). |
+| **Make Campus Email** | Creates a standardized WSC email address based on the generated system userid (e.g., dejohn01@wsc.edu). |
 
 ---
 
@@ -236,12 +238,27 @@ Extends base `people` information for students.
 | **Delete a department and its courses** | Deletes a department and all related courses safely. |
 
 ---
-
  ## Triggers
-| Trigger | What It Does |
-|----------------------|--------------|
-| **Format course_code** | Ensures the course_code is in the correct format (AAA###). | 
----
+| Trigger                          | What It Does                                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **trg_people_userid**            | Automatically generates a unique `system_user_id` and `campus_email` for each new person (e.g., `stcain01` → `stcain01@wsc.edu`). |
+| **trg_cumulative_gpa_before**    | Validates GPA format (X.Y) and ensures GPA is between 0.0–4.0 before insertion; also sets `audit_user_id` from `CURRENT_USER()`.  |
+| **trg_student_gpa_audit_insert** | Logs newly inserted student GPAs into the `student_gpa_audit` table.                                                              |
+| **trg_student_gpa_audit_update** | Records GPA changes by inserting old and new GPA values into the GPA audit table after updates.                                   |
+| **trg_course_code_validation**   | Ensures the `course_code` follows the required pattern (AAA###: 3 letters + 3 digits).                                            |
+| **Course Audit Triggers**        | Logs course INSERT, UPDATE, and DELETE actions into `course_audit` for historical tracking.                                       |
+| **Monthly Audit Cleanup Events** | Scheduled events that automatically truncate `course_audit` and `student_gpa_audit` every month.                                  |
+
+## Trigger Testing
+| Test                   | Expected Result                                           |
+| ---------------------- | --------------------------------------------------------- |
+| **Insert new person**  | Generates `system_user_id` and `campus_email`.            |
+| **Insert valid GPA**   | Student added successfully and an audit row is recorded.  |
+| **Insert invalid GPA** | Trigger blocks insertion with an error message.           |
+| **Update GPA**         | Inserts audit row showing old and new GPA values.         |
+| **Insert course_code** | Accepts only values in the format AAA###; rejects others. |
+
+
 
 ## Developers
 
