@@ -1,12 +1,12 @@
 USE af25stevc1_collegeDB_V4;
-
+-- Drops my triggers because I had to change them
 DROP TRIGGER IF EXISTS trg_cumulative_gpa_before;
 DROP TRIGGER IF EXISTS trg_student_gpa_audit_insert;
 DROP TRIGGER IF EXISTS trg_student_gpa_audit_update;
 
-
+-- Validates GPA format (X.Y between 0.0 and 4.0) before inserting a student.
+-- Also sets audit_user_id to the first part of CURRENT_USER().
 Delimiter //
-
 create TRIGGER trg_cumulative_gpa_before
 Before insert on student
 for each row
@@ -22,8 +22,9 @@ begin
 END//
 DELIMITER ;
 
+-- Creates an audit entry whenever a new student is inserted.
+-- Logs the new GPA value with action_type = 'INSERT'.
 Delimiter //
-
 CREATE TRIGGER trg_student_gpa_audit_insert
 AFTER INSERT ON student
 FOR EACH ROW
@@ -43,8 +44,10 @@ BEGIN
 END//
 DELIMITER ;
 
-DELIMITER //
 
+-- Logs GPA updates by recording old and new GPA values.
+-- Only inserts an audit record if the GPA actually changes.
+DELIMITER //
 CREATE TRIGGER trg_student_gpa_audit_update
 AFTER UPDATE ON student
 FOR EACH ROW
@@ -60,6 +63,15 @@ BEGIN
 END//
 
 DELIMITER ;
+
+-- Monthly cleanup for student GPA audit
+CREATE EVENT ev_student_gpa_audit_monthly_cleanup
+ON SCHEDULE EVERY 1 MONTH
+DO
+    TRUNCATE TABLE student_gpa_audit;
+
+
+---TEST CASES
 
 -- Should work:
 CALL add_new_student(
@@ -123,3 +135,4 @@ CALL add_new_student(
     4.5,
     2
 );
+
